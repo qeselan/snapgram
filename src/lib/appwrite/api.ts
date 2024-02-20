@@ -1,6 +1,7 @@
 import { ID, Query } from "appwrite";
 import { INewPost, INewUser } from "@/types";
 import { account, appwriteConfig, avatars, databases, storage } from "./config";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 
 export async function createUserAccount(user: INewUser) {
   try {
@@ -83,7 +84,6 @@ export async function getCurrentUser() {
 export async function signOutAccount() {
   try {
     const session = await account.deleteSession("current");
-
     return session;
   } catch (error) {
     console.log(error);
@@ -186,4 +186,57 @@ export async function getRecentPosts() {
   if (!posts) throw new Error();
 
   return posts;
+}
+
+export async function likePost(postId: string, likesArray: String[]) {
+  try {
+    const updatedPost = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId,
+      { likes: likesArray }
+    );
+
+    if (!updatedPost) throw new Error();
+
+    return updatedPost;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function savePost(postId: string, userId: String) {
+  try {
+    const updatedPost = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.saveCollectionId,
+      ID.unique(),
+      {
+        user: userId,
+        post: postId,
+      }
+    );
+
+    if (!updatedPost) throw new Error();
+
+    return updatedPost;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function deleteSavedPost(savedRecordId: string) {
+  try {
+    const statusCode = await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.saveCollectionId,
+      savedRecordId
+    );
+
+    if (!statusCode) throw new Error();
+
+    return { status: "ok" };
+  } catch (error) {
+    console.log(error);
+  }
 }
